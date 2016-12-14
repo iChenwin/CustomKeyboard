@@ -7,8 +7,10 @@
 //
 
 #import "ViewController.h"
+#import "Keyboard.h"
 
 @interface ViewController ()
+@property (weak, nonatomic) IBOutlet UITextView *textView;
 
 @end
 
@@ -17,6 +19,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    Keyboard *keyboard = [[Keyboard alloc] init];
+    keyboard.textView = self.textView;
+    [self.textView setInputView:keyboard];
 }
 
 
