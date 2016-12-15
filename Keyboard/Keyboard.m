@@ -16,7 +16,7 @@
 
 - (void)updateChar:(nullable NSString *)chars shift:(BOOL)shift;
 
-- (void)addPopup;
+//- (void)addPopup;
 
 @end
 
@@ -31,8 +31,9 @@
 #define kVerticalGap 19
 #define kStartBtnX   kBtnGap / 2
 #define kStartBtnY   15
-#define kAltWidth    34
-#define kSpaceWidth  120
+#define kShiftWidth  35
+#define kAltWidth    45
+#define kSpaceWidth  130
 #define kScreenWidth [UIScreen mainScreen].bounds.size.width
 #define kScreenHeight [UIScreen mainScreen].bounds.size.height
 
@@ -44,7 +45,9 @@ enum {
 };
 @interface Keyboard ()
 
-
+@property (assign, nonatomic) BOOL showSymbol;
+@property (assign, nonatomic) BOOL showMoreSymbol;
+@property (assign, nonatomic) BOOL shiftEnabled;
 
 @end
 
@@ -67,17 +70,28 @@ enum {
 //        self.backgroundColor = [UIColor lightGrayColor];
     }
     self.charsBtn = [NSMutableArray array];
-    [self setupASCIICapableLayout:YES];
+    [self setupASCIICapableLayout:YES withArray:kChar];
+    self.showSymbol = NO;
+    self.showMoreSymbol = NO;
+    self.shiftEnabled = NO;
     
     return self;
 }
 
 - (void) loadFunctionalKeys {
+    //shift按钮
+    self.shiftButton = [[UIButton alloc] initWithFrame:CGRectMake(kStartBtnX, kStartBtnY + 2 * (kBtnHeight + kVerticalGap), kShiftWidth, kBtnHeight)];
+    [self.shiftButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [self.shiftButton setTitle:@"⇧" forState:UIControlStateNormal];
+    [self.shiftButton.layer setBorderWidth:1.0f];
+    [self.shiftButton addTarget:self action:@selector(shiftPressed:) forControlEvents:UIControlEventTouchUpInside];
+    [self addSubview:self.shiftButton];
+    
     //回删按钮
-    self.deleteButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth - kAltWidth - kStartBtnX, kStartBtnY + 2 * (kBtnHeight + kVerticalGap), kAltWidth, kBtnHeight)];
+    self.deleteButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth - kShiftWidth - kStartBtnX, kStartBtnY + 2 * (kBtnHeight + kVerticalGap), kShiftWidth, kBtnHeight)];
     [self.deleteButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.deleteButton setTitle:@"<-" forState:UIControlStateNormal];
-//    [self.deleteButton.layer setBorderWidth:1.0f];
+    [self.deleteButton.layer setBorderWidth:1.0f];
     [self.deleteButton addTarget:self action:@selector(deletePressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.deleteButton];
     
@@ -86,7 +100,7 @@ enum {
     [self.altButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.altButton setTitle:@"123" forState:UIControlStateNormal];
     [self.altButton.titleLabel setFont:[UIFont fontWithName:@"GurmukhiMN" size:18]];
-//    [self.altButton.layer setBorderWidth:1.0f];
+    [self.altButton.layer setBorderWidth:1.0f];
     [self.altButton addTarget:self action:@selector(altPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.altButton];
     
@@ -94,7 +108,7 @@ enum {
     self.emojiButton = [[UIButton alloc] initWithFrame:CGRectMake(kStartBtnX + kBtnGap + kAltWidth, kStartBtnY + 3 * (kBtnHeight + kVerticalGap), kAltWidth, kBtnHeight)];
     [self.emojiButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.emojiButton setTitle:@"😀" forState:UIControlStateNormal];
-//    [self.emojiButton.layer setBorderWidth:1.0f];
+    [self.emojiButton.layer setBorderWidth:1.0f];
     [self.emojiButton addTarget:self action:@selector(emojiPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.emojiButton];
     
@@ -103,7 +117,7 @@ enum {
     [self.spaceButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
     [self.spaceButton setTitle:@"Space" forState:UIControlStateNormal];
     [self.spaceButton.titleLabel setFont:[UIFont fontWithName:@"GurmukhiMN" size:18]];
-//    [self.spaceButton.layer setBorderWidth:1.0f];
+    [self.spaceButton.layer setBorderWidth:1.0f];
     [self.spaceButton addTarget:self action:@selector(spacePressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.spaceButton];
     
@@ -112,10 +126,32 @@ enum {
     [self.returnButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.returnButton setTitle:@"Return" forState:UIControlStateNormal];
     [self.returnButton.titleLabel setFont:[UIFont fontWithName:@"GurmukhiMN" size:18]];
-//    [self.returnButton.layer setBorderWidth:1.0f];
+    [self.returnButton.layer setBorderWidth:1.0f];
     [self.returnButton addTarget:self action:@selector(returnPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.returnButton];
 
+}
+
+- (void) shiftPressed: (UIButton *)btn {
+    if (self.showSymbol) {
+        //正显示字符符号 无需切换大写
+        self.showMoreSymbol = !self.showMoreSymbol;
+        [self updateShiftBtnTitleState];
+        NSArray *__symbols = self.showMoreSymbol ? moreSymbols : Symbols;
+        [self setupSymbolLayout:NO withArray:__symbols];
+    } else {
+        self.shiftEnabled = !self.shiftEnabled;
+        self.shiftEnabled ? [self setupASCIICapableLayout:NO withArray:kChar_shift] : [self setupASCIICapableLayout:NO withArray:kChar];
+        [self.shiftButton setTitle:self.shiftEnabled ? @"⇪" : @"⇧" forState:UIControlStateNormal];
+//        NSArray *subChars = [self subviews];
+//        [btn setTitle:self.shiftEnabled?@"⇪":@"⇧" forState:UIControlStateNormal];
+//        [subChars enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+//            if ([obj isKindOfClass:[JSChar class]]) {
+//                JSChar *tmp = (JSChar *)obj;
+//                [tmp shift:self.shiftEnabled];
+//            }
+//        }];
+    }
 }
 
 - (void) deletePressed:(UIButton *)btn {
@@ -123,8 +159,29 @@ enum {
 }
 
 - (void) altPressed:(UIButton *)btn {
-    [self setupSymbolLayout:NO];
+    self.showSymbol = !self.showSymbol;
+    if (self.showSymbol) {
+        [self setupSymbolLayout:NO withArray:Symbols];
+    } else {
+        [self setupASCIICapableLayout:NO withArray:kChar];
+        self.showMoreSymbol = NO;
+    }
+    NSString *title = self.showSymbol ? @"ABC" : @"123";
+    [self.altButton setTitle:title forState:UIControlStateNormal];
+    
+    [self updateShiftBtnTitleState];
 }
+
+- (void)updateShiftBtnTitleState {
+    NSString *title ;
+    if (self.showSymbol) {
+        title = self.showMoreSymbol?@"123":@"#+=";
+    }else{
+        title = self.shiftEnabled?@"⇪":@"⇧";
+    }
+    [self.shiftButton setTitle:title forState:UIControlStateNormal];
+}
+
 
 - (void) emojiPressed:(UIButton *)btn {
     
@@ -134,7 +191,7 @@ enum {
     [self.textView insertText:@" "];
 }
 
-- (void) setupSymbolLayout:(BOOL)init {
+- (void) setupSymbolLayout:(BOOL)init withArray:(NSArray *)array{
     if (!init){
         //不是初始化创建 重新布局字母或字符界面
         NSArray *subviews = self.subviews;
@@ -149,11 +206,13 @@ enum {
         self.charsBtn = nil;
     }
     
+    self.charsBtn = [NSMutableArray arrayWithCapacity:0];
+    
     int i = 0;
     int btnWidth = (kScreenWidth - kBtnGap * 10) / 10;
     int btnX = kStartBtnX;
     int btnY = kStartBtnY;
-    for (NSString *btnStr in Symbols) {
+    for (NSString *btnStr in array) {
         JSChar *btn = [[JSChar alloc] init];
         if (i < 10) {
             btnX = kStartBtnX + i * (btnWidth + kBtnGap);
@@ -163,11 +222,11 @@ enum {
             btnY = kStartBtnY + kBtnHeight + kVerticalGap;
             btn.frame = CGRectMake(btnX, btnY, btnWidth, kBtnHeight);
         } else {
-            btnX = kAltWidth + (kScreenWidth - 5 * (40 + kBtnGap) - kAltWidth * 2) / 2 + (kBtnGap + 40) * (i - 20);
+            btnX = kShiftWidth + (kScreenWidth - 5 * (40 + kBtnGap) - kShiftWidth * 2) / 2 + (kBtnGap + 40) * (i - 20);
             btnY = kStartBtnY + (kBtnHeight + kVerticalGap) * 2;
-            btn.frame = CGRectMake(btnX, btnY, kAltWidth, kBtnHeight);
+            btn.frame = CGRectMake(btnX, btnY, kShiftWidth, kBtnHeight);
         }
-        
+        btn.userInteractionEnabled = YES;
         [btn setTitle:btnStr forState:UIControlStateNormal];
         [btn.titleLabel setFont:[UIFont systemFontOfSize:22]];
         [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
@@ -183,7 +242,7 @@ enum {
     [self.textView insertText:@"\n"];
 }
 
-- (void) setupASCIICapableLayout:(BOOL)init {
+- (void) setupASCIICapableLayout:(BOOL)init withArray:(NSArray *)array{
     if (!init){
         //不是初始化创建 重新布局字母或字符界面
         NSArray *subviews = self.subviews;
@@ -198,22 +257,25 @@ enum {
         self.charsBtn = nil;
     }
     
+    self.charsBtn = [NSMutableArray arrayWithCapacity:0];
+    
     int i = 0;
     int btnWidth = (kScreenWidth - kBtnGap * 10) / 10;
     int btnX = kStartBtnX;
     int btnY = kStartBtnY;
-    for (NSString *btnStr in kChar) {
+    for (NSString *btnStr in array) {
         if (i < 10){
             btnX = kStartBtnX + i * (btnWidth + kBtnGap);
         }else if (i >= 10 && i < 19) {
             btnX = (kScreenWidth - 8 * (btnWidth + kBtnGap) - btnWidth) / 2 + (kBtnGap + btnWidth) * (i - 10);
             btnY = kStartBtnY + kBtnHeight + kVerticalGap;
         } else if (i >= 19 && i < 28) {
-            btnX = kAltWidth + (kScreenWidth - 7 * (btnWidth + kBtnGap) - kAltWidth * 2) / 2 + (kBtnGap + btnWidth) * (i - 19);
+            btnX = kShiftWidth + (kScreenWidth - 7 * (btnWidth + kBtnGap) - kShiftWidth * 2) / 2 + (kBtnGap + btnWidth) * (i - 19);
             btnY = kStartBtnY + (kBtnHeight + kVerticalGap) * 2;
         }
         
         JSChar *btn = [[JSChar alloc] initWithFrame:CGRectMake(btnX, btnY, btnWidth, kBtnHeight)];
+        btn.userInteractionEnabled = YES;
         [btn setTitle:btnStr forState:UIControlStateNormal];
 //        [btn setBackgroundColor:[UIColor blackColor]];
         [btn.titleLabel setFont:[UIFont systemFontOfSize:22]];
@@ -226,14 +288,15 @@ enum {
     }
 }
 
-- (void)characterTouchAction:(UIButton *)btn {
+- (void)characterTouchAction:(JSChar *)btn {
+//    [self addPopupToButton:btn];
     [self.textView insertText:btn.titleLabel.text];
 }
 
-- (void)touchesBegan: (NSSet *)touches withEvent: (UIEvent *)event {
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     CGPoint location = [[touches anyObject] locationInView:self];
     
-    for (UIButton *b in self.charsBtn) {
+    for (JSChar *b in self.charsBtn) {
         if ([b subviews].count > 1) {
             [[[b subviews] objectAtIndex:1] removeFromSuperview];
         }
@@ -245,16 +308,30 @@ enum {
     }
 }
 
-- (void)addPopupToButton:(UIButton *)b {
+-(void) touchesEnded: (NSSet *)touches withEvent: (UIEvent *)event{
+//    CGPoint location = [[touches anyObject] locationInView:self];
+    
+    for (UIButton *b in self.charsBtn) {
+        if ([b subviews].count > 1) {
+            [[[b subviews] objectAtIndex:1] removeFromSuperview];
+        }
+//        if(CGRectContainsPoint(b.frame, location))
+//        {
+//            [self characterPressed:b];
+//        }
+    }
+}
+
+- (void)addPopupToButton:(JSChar *)b {
     UIImageView *keyPop = nil;
     UILabel *text = [[UILabel alloc] initWithFrame:CGRectMake(15, 10, 52, 60)];
     
 //    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0) {
-        if (b == [self.charsBtn objectAtIndex:0] || b == [self.charsBtn objectAtIndex:10]) {
+        if (b.tag == 0 || b.tag == 10) {
             keyPop = [[UIImageView alloc] initWithImage:[self createiOS7KeytopImageWithKind:popupViewImageRight]];
             keyPop.frame = CGRectMake(-16, -71, keyPop.frame.size.width, keyPop.frame.size.height);
         }
-        else if (b == [self.charsBtn objectAtIndex:9] || b == [self.charsBtn objectAtIndex:18]) {
+        else if (b.tag == 9 || b.tag == 18) {
             keyPop = [[UIImageView alloc] initWithImage:[self createiOS7KeytopImageWithKind:popupViewImageLeft]];
             keyPop.frame = CGRectMake(-38, -71, keyPop.frame.size.width, keyPop.frame.size.height);
         }
@@ -475,10 +552,23 @@ enum {
 }
 @end
 
+@interface JSChar ()
+
+@property (strong, nonatomic) NSString *chars;
+@property (assign, nonatomic) BOOL isShift;
+
+@end
+
 @implementation JSChar
 
+//- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+//    [self addPopupToButton:self];
+//}
+//- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+//    [[[self subviews] objectAtIndex:1] removeFromSuperview];
+//}
 - (void)addRoundCornerBackdround {
-    CGSize size = [self bounds].size;
+//    CGSize size = [self bounds].size;
 //    UIImage *backImg = [UIImage pb_imageFromColor:NHColor(64, 66, 68)];
 //    backImg = [backImg pb_drawRectWithRoundCorner:NHCHAR_CORNER toSize:size];
 //    [self setBackgroundImage:backImg forState:UIControlStateNormal];
@@ -486,34 +576,34 @@ enum {
 
 - (void)updateChar:(nullable NSString *)chars {
     if (chars.length > 0) {
-//        _chars = [chars copy];
+        _chars = [chars copy];
         [self updateTitleState];
     }
 }
 
 - (void)updateChar:(nullable NSString *)chars shift:(BOOL)shift {
     if (chars.length > 0) {
-//        _chars = [chars copy];
-//        self.isShift = shift;
+        _chars = [chars copy];
+        self.isShift = shift;
         [self updateTitleState];
     }
 }
 
 - (void)shift:(BOOL)shift {
-//    if (shift == self.isShift) {
-//        return;
-//    }
-//    self.isShift = shift;
+    if (shift == self.isShift) {
+        return;
+    }
+    self.isShift = shift;
     [self updateTitleState];
 }
 
 - (void)updateTitleState {
-//    NSString *tmp = self.isShift?[self.chars uppercaseString]:[self.chars lowercaseString];
+    NSString *tmp = self.isShift?[self.chars uppercaseString]:[self.chars lowercaseString];
     if ([[NSThread currentThread] isMainThread]) {
-//        [self setTitle:tmp forState:UIControlStateNormal];
+        [self setTitle:tmp forState:UIControlStateNormal];
     }else{
         dispatch_async(dispatch_get_main_queue(), ^{
-//            [self setTitle:tmp forState:UIControlStateNormal];
+            [self setTitle:tmp forState:UIControlStateNormal];
         });
     }
 }
@@ -763,4 +853,233 @@ enum {
 //    [self addSubview:keyPop];
 //}
 
+
+- (void)addPopupToButton:(JSChar *)b {
+    UIImageView *keyPop = nil;
+    UILabel *text = [[UILabel alloc] initWithFrame:CGRectMake(15, 10, 52, 60)];
+    
+    //    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0) {
+    if (b.tag == 0 || b.tag == 10) {
+        keyPop = [[UIImageView alloc] initWithImage:[self createiOS7KeytopImageWithKind:popupViewImageRight]];
+        keyPop.frame = CGRectMake(-16, -71, keyPop.frame.size.width, keyPop.frame.size.height);
+    }
+    else if (b.tag == 9 || b.tag == 18) {
+        keyPop = [[UIImageView alloc] initWithImage:[self createiOS7KeytopImageWithKind:popupViewImageLeft]];
+        keyPop.frame = CGRectMake(-38, -71, keyPop.frame.size.width, keyPop.frame.size.height);
+    }
+    else {
+        keyPop = [[UIImageView alloc] initWithImage:[self createiOS7KeytopImageWithKind:popupViewImageInner]];
+        keyPop.frame = CGRectMake(-27, -71, keyPop.frame.size.width, keyPop.frame.size.height);
+    }
+    
+    //    }
+    //    else {
+    //        if (b == [self.charsBtn objectAtIndex:0] || b == [self.charsBtn objectAtIndex:11]) {
+    //            keyPop = [[UIImageView alloc] initWithImage:[self createKeytopImageWithKind:PKNumberPadViewImageRight]];
+    //            keyPop.frame = CGRectMake(-16, -71, keyPop.frame.size.width, keyPop.frame.size.height);
+    //        }
+    //        else if (b == [self.charsBtn objectAtIndex:10] || b == [self.charsBtn objectAtIndex:21]) {
+    //            keyPop = [[UIImageView alloc] initWithImage:[self createKeytopImageWithKind:PKNumberPadViewImageLeft]];
+    //            keyPop.frame = CGRectMake(-38, -71, keyPop.frame.size.width, keyPop.frame.size.height);
+    //        }
+    //        else {
+    //            keyPop = [[UIImageView alloc] initWithImage:[self createKeytopImageWithKind:PKNumberPadViewImageInner]];
+    //            keyPop.frame = CGRectMake(-27, -71, keyPop.frame.size.width, keyPop.frame.size.height);
+    //        }
+    //
+    //    }
+    
+    [text setFont:[UIFont systemFontOfSize:44]];
+    
+    [text setTextAlignment:NSTextAlignmentCenter];
+    [text setBackgroundColor:[UIColor clearColor]];
+    [text setAdjustsFontSizeToFitWidth:YES];
+    [text setText:b.titleLabel.text];
+    
+    keyPop.layer.shadowColor = [UIColor colorWithWhite:0.1 alpha:1.0].CGColor;
+    keyPop.layer.shadowOffset = CGSizeMake(0, 2.0);
+    keyPop.layer.shadowOpacity = 0.30;
+    keyPop.layer.shadowRadius = 3.0;
+    keyPop.clipsToBounds = NO;
+    
+    [keyPop addSubview:text];
+    [b addSubview:keyPop];
+}
+
+#define __UPPER_WIDTH   (52.0 * [[UIScreen mainScreen] scale])
+#define __LOWER_WIDTH   (24.0 * [[UIScreen mainScreen] scale])
+
+#define __PAN_UPPER_RADIUS  (10.0 * [[UIScreen mainScreen] scale])
+#define __PAN_LOWER_RADIUS  (5.0 * [[UIScreen mainScreen] scale])
+
+#define __PAN_UPPDER_WIDTH   (__UPPER_WIDTH-__PAN_UPPER_RADIUS*2)
+#define __PAN_UPPER_HEIGHT    (52.0 * [[UIScreen mainScreen] scale])
+
+#define __PAN_LOWER_WIDTH     (__LOWER_WIDTH-__PAN_LOWER_RADIUS*2)
+#define __PAN_LOWER_HEIGHT    (47.0 * [[UIScreen mainScreen] scale])
+
+#define __PAN_UL_WIDTH        ((__UPPER_WIDTH-__LOWER_WIDTH)/2)
+
+#define __PAN_MIDDLE_HEIGHT    (2.0 * [[UIScreen mainScreen] scale])
+
+#define __PAN_CURVE_SIZE      (10.0 * [[UIScreen mainScreen] scale])
+//TODO: dpi不同而引起的比例问题[[UIScreen mainScreen] scale]，关于像素和点的区别：http://blog.fourdesire.com/2014/12/11/ta-zhen-de-bu-shi-wo-xiong-di-xiang-su-gen-dian-da-bu-tong/
+#define __PADDING_X     (15 * [[UIScreen mainScreen] scale])
+#define __PADDING_Y     (10 * [[UIScreen mainScreen] scale])
+#define __WIDTH   (__UPPER_WIDTH + __PADDING_X*2)
+#define __HEIGHT   (__PAN_UPPER_HEIGHT + __PAN_MIDDLE_HEIGHT + __PAN_LOWER_HEIGHT + __PADDING_Y*2)
+
+
+#define __OFFSET_X    -25 * [[UIScreen mainScreen] scale])
+#define __OFFSET_Y    59 * [[UIScreen mainScreen] scale])
+
+
+- (UIImage *)createiOS7KeytopImageWithKind:(int)kind
+{
+    CGMutablePathRef path = CGPathCreateMutable();
+    
+    CGPoint p = CGPointMake(__PADDING_X, __PADDING_Y);
+    CGPoint p1 = CGPointZero;
+    CGPoint p2 = CGPointZero;
+    
+    p.x += __PAN_UPPER_RADIUS;
+    CGPathMoveToPoint(path, NULL, p.x, p.y);
+    
+    p.x += __PAN_UPPDER_WIDTH;
+    CGPathAddLineToPoint(path, NULL, p.x, p.y);
+    
+    p.y += __PAN_UPPER_RADIUS;
+    CGPathAddArc(path, NULL,
+                 p.x, p.y,
+                 __PAN_UPPER_RADIUS,
+                 3.0*M_PI/2.0,
+                 4.0*M_PI/2.0,
+                 false);
+    
+    p.x += __PAN_UPPER_RADIUS;
+    p.y += __PAN_UPPER_HEIGHT - __PAN_UPPER_RADIUS - __PAN_CURVE_SIZE;
+    CGPathAddLineToPoint(path, NULL, p.x, p.y);
+    
+    p1 = CGPointMake(p.x, p.y + __PAN_CURVE_SIZE);
+    switch (kind) {
+        case popupViewImageLeft:
+            p.x -= __PAN_UL_WIDTH*2;
+            break;
+            
+        case popupViewImageInner:
+            p.x -= __PAN_UL_WIDTH;
+            break;
+            
+        case popupViewImageRight:
+            break;
+    }
+    
+    p.y += __PAN_MIDDLE_HEIGHT + __PAN_CURVE_SIZE*2;
+    p2 = CGPointMake(p.x, p.y - __PAN_CURVE_SIZE);
+    CGPathAddCurveToPoint(path, NULL,
+                          p1.x, p1.y,
+                          p2.x, p2.y,
+                          p.x, p.y);
+    
+    p.y += __PAN_LOWER_HEIGHT - __PAN_CURVE_SIZE - __PAN_LOWER_RADIUS;
+    CGPathAddLineToPoint(path, NULL, p.x, p.y);
+    
+    p.x -= __PAN_LOWER_RADIUS;
+    CGPathAddArc(path, NULL,
+                 p.x, p.y,
+                 __PAN_LOWER_RADIUS,
+                 4.0*M_PI/2.0,
+                 1.0*M_PI/2.0,
+                 false);
+    
+    p.x -= __PAN_LOWER_WIDTH;
+    p.y += __PAN_LOWER_RADIUS;
+    CGPathAddLineToPoint(path, NULL, p.x, p.y);
+    
+    p.y -= __PAN_LOWER_RADIUS;
+    CGPathAddArc(path, NULL,
+                 p.x, p.y,
+                 __PAN_LOWER_RADIUS,
+                 1.0*M_PI/2.0,
+                 2.0*M_PI/2.0,
+                 false);
+    
+    p.x -= __PAN_LOWER_RADIUS;
+    p.y -= __PAN_LOWER_HEIGHT - __PAN_LOWER_RADIUS - __PAN_CURVE_SIZE;
+    CGPathAddLineToPoint(path, NULL, p.x, p.y);
+    
+    p1 = CGPointMake(p.x, p.y - __PAN_CURVE_SIZE);
+    
+    switch (kind) {
+        case popupViewImageLeft:
+            break;
+            
+        case popupViewImageInner:
+            p.x -= __PAN_UL_WIDTH;
+            break;
+            
+        case popupViewImageRight:
+            p.x -= __PAN_UL_WIDTH*2;
+            break;
+    }
+    
+    p.y -= __PAN_MIDDLE_HEIGHT + __PAN_CURVE_SIZE*2;
+    p2 = CGPointMake(p.x, p.y + __PAN_CURVE_SIZE);
+    CGPathAddCurveToPoint(path, NULL,
+                          p1.x, p1.y,
+                          p2.x, p2.y,
+                          p.x, p.y);
+    
+    p.y -= __PAN_UPPER_HEIGHT - __PAN_UPPER_RADIUS - __PAN_CURVE_SIZE;
+    CGPathAddLineToPoint(path, NULL, p.x, p.y);
+    
+    p.x += __PAN_UPPER_RADIUS;
+    CGPathAddArc(path, NULL,
+                 p.x, p.y,
+                 __PAN_UPPER_RADIUS,
+                 2.0*M_PI/2.0,
+                 3.0*M_PI/2.0,
+                 false);
+    //----
+    CGContextRef context;
+    UIGraphicsBeginImageContext(CGSizeMake(__WIDTH,
+                                           __HEIGHT));
+    context = UIGraphicsGetCurrentContext();
+    
+    switch (kind) {
+        case popupViewImageLeft:
+            CGContextTranslateCTM(context, 6.0, __HEIGHT);
+            break;
+            
+        case popupViewImageInner:
+            CGContextTranslateCTM(context, 0.0, __HEIGHT);
+            break;
+            
+        case popupViewImageRight:
+            CGContextTranslateCTM(context, -6.0, __HEIGHT);
+            break;
+    }
+    CGContextScaleCTM(context, 1.0, -1.0);
+    
+    CGContextAddPath(context, path);
+    CGContextClip(context);
+    
+    //----
+    
+    CGRect frame = CGPathGetBoundingBox(path);
+    CGContextSetFillColorWithColor(context, [[UIColor colorWithRed:0.973 green:0.976 blue:0.976 alpha:1.000] CGColor]);
+    CGContextFillRect(context, frame);
+    
+    CGImageRef imageRef = CGBitmapContextCreateImage(context);
+    
+    UIImage * image = [UIImage imageWithCGImage:imageRef scale:[[UIScreen mainScreen] scale] orientation:UIImageOrientationDown];
+    CGImageRelease(imageRef);
+    
+    UIGraphicsEndImageContext();
+    
+    
+    CFRelease(path);
+    
+    return image;
+}
 @end

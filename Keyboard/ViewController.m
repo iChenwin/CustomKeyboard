@@ -21,9 +21,13 @@
     // Do any additional setup after loading the view, typically from a nib.
     Keyboard *keyboard = [[Keyboard alloc] init];
     keyboard.textView = self.textView;
+    self.textView.userInteractionEnabled = YES;
     [self.textView setInputView:keyboard];
 }
 
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    NSLog(@"touched");
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
