@@ -25,6 +25,12 @@
 #define Symbols  @[@"1", @"2", @"3", @"4", @"5", @"6", @"7", @"8", @"9", @"0", @"-", @"/", @":", @";", @"(", @")", @"$", @"&", @"@", @"\"", @".", @",", @"?", @"!", @"'"]
 #define moreSymbols  @[@"[", @"]", @"{", @"}", @"#", @"%", @"^", @"*", @"+", @"=", @"_", @"\\", @"|", @"~", @"<", @">", @"€", @"£", @"¥", @"•", @".", @",", @"?", @"!", @"'"]
 
+#define UIColorFromRGB(rgbValue) \
+[UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 \
+                green:((float)((rgbValue & 0x00FF00) >>  8))/255.0 \
+                 blue:((float)((rgbValue & 0x0000FF) >>  0))/255.0 \
+                alpha:1.0]
+
 #define kKBH         216
 #define kBtnHeight   35
 #define kBtnGap      5
@@ -67,7 +73,7 @@ enum {
         [[nib objectAtIndex:0] setFrame:frame];
         self = [nib objectAtIndex:0];
         [self loadFunctionalKeys];
-//        self.backgroundColor = [UIColor lightGrayColor];
+        self.backgroundColor = UIColorFromRGB(0x202A39);
     }
     self.charsBtn = [NSMutableArray array];
     [self setupASCIICapableLayout:YES withArray:kChar];
@@ -81,55 +87,61 @@ enum {
 - (void) loadFunctionalKeys {
     //shift按钮
     self.shiftButton = [[UIButton alloc] initWithFrame:CGRectMake(kStartBtnX, kStartBtnY + 2 * (kBtnHeight + kVerticalGap), kShiftWidth, kBtnHeight)];
-    [self.shiftButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+//    [self.shiftButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.shiftButton setTitle:@"⇧" forState:UIControlStateNormal];
-    [self.shiftButton.layer setBorderWidth:1.0f];
+//    [self.shiftButton.layer setBorderWidth:1.0f];
     [self.shiftButton addTarget:self action:@selector(shiftPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.shiftButton];
     
     //回删按钮
     self.deleteButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth - kShiftWidth - kStartBtnX, kStartBtnY + 2 * (kBtnHeight + kVerticalGap), kShiftWidth, kBtnHeight)];
-    [self.deleteButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+//    [self.deleteButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.deleteButton setTitle:@"<-" forState:UIControlStateNormal];
-    [self.deleteButton.layer setBorderWidth:1.0f];
+//    [self.deleteButton.layer setBorderWidth:1.0f];
     [self.deleteButton addTarget:self action:@selector(deletePressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.deleteButton];
     
     //Alt按钮
     self.altButton = [[UIButton alloc] initWithFrame:CGRectMake(kStartBtnX, kStartBtnY + 3 * (kBtnHeight + kVerticalGap), kAltWidth, kBtnHeight)];
-    [self.altButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+//    [self.altButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.altButton setTitle:@"123" forState:UIControlStateNormal];
     [self.altButton.titleLabel setFont:[UIFont fontWithName:@"GurmukhiMN" size:18]];
-    [self.altButton.layer setBorderWidth:1.0f];
+//    [self.altButton.layer setBorderWidth:1.0f];
     [self.altButton addTarget:self action:@selector(altPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.altButton];
     
     //emoji按钮
     self.emojiButton = [[UIButton alloc] initWithFrame:CGRectMake(kStartBtnX + kBtnGap + kAltWidth, kStartBtnY + 3 * (kBtnHeight + kVerticalGap), kAltWidth, kBtnHeight)];
-    [self.emojiButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+//    [self.emojiButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.emojiButton setTitle:@"😀" forState:UIControlStateNormal];
-    [self.emojiButton.layer setBorderWidth:1.0f];
+//    [self.emojiButton.layer setBorderWidth:1.0f];
     [self.emojiButton addTarget:self action:@selector(emojiPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.emojiButton];
     
     //Space按钮
     self.spaceButton = [[UIButton alloc] initWithFrame:CGRectMake(kStartBtnX + (kBtnGap + kAltWidth) * 2, kStartBtnY + 3 * (kBtnHeight + kVerticalGap), kSpaceWidth, kBtnHeight)];
-    [self.spaceButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+    [self.spaceButton setTitleColor:UIColorFromRGB(0x202A39) forState:UIControlStateNormal];
+    [self.spaceButton setBackgroundColor:[UIColor whiteColor]];
     [self.spaceButton setTitle:@"Space" forState:UIControlStateNormal];
     [self.spaceButton.titleLabel setFont:[UIFont fontWithName:@"GurmukhiMN" size:18]];
-    [self.spaceButton.layer setBorderWidth:1.0f];
+//    [self.spaceButton.layer setBorderWidth:1.0f];
     [self.spaceButton addTarget:self action:@selector(spacePressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.spaceButton];
     
     //return按钮
     self.returnButton = [[UIButton alloc] initWithFrame:CGRectMake((kBtnGap + kAltWidth) * 2 + kSpaceWidth + kBtnGap * 1.5, kStartBtnY + 3 * (kBtnHeight + kVerticalGap), kScreenWidth - kAltWidth * 2 - 4 * kBtnGap - kSpaceWidth, kBtnHeight)];
-    [self.returnButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+//    [self.returnButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.returnButton setTitle:@"Return" forState:UIControlStateNormal];
     [self.returnButton.titleLabel setFont:[UIFont fontWithName:@"GurmukhiMN" size:18]];
-    [self.returnButton.layer setBorderWidth:1.0f];
+//    [self.returnButton.layer setBorderWidth:1.0f];
     [self.returnButton addTarget:self action:@selector(returnPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.returnButton];
 
+}
+
+- (void)characterTouchAction:(JSChar *)btn {
+    //    [self addPopupToButton:btn];
+    [self.textView insertText:btn.titleLabel.text];
 }
 
 - (void) shiftPressed: (UIButton *)btn {
@@ -191,6 +203,10 @@ enum {
     [self.textView insertText:@" "];
 }
 
+-(void) returnPressed:(UIButton *)btn {
+    [self.textView insertText:@"\n"];
+}
+
 - (void) setupSymbolLayout:(BOOL)init withArray:(NSArray *)array{
     if (!init){
         //不是初始化创建 重新布局字母或字符界面
@@ -226,20 +242,25 @@ enum {
             btnY = kStartBtnY + (kBtnHeight + kVerticalGap) * 2;
             btn.frame = CGRectMake(btnX, btnY, kShiftWidth, kBtnHeight);
         }
+        
+        if (i == 0 || i == 10) {
+            btn.tag = 0;
+        } else if (i == 9 || i == 19) {
+            btn.tag = 9;
+        } else {
+            btn.tag = 1;
+        }
+        
         btn.userInteractionEnabled = YES;
         [btn setTitle:btnStr forState:UIControlStateNormal];
         [btn.titleLabel setFont:[UIFont systemFontOfSize:22]];
-        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+//        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         [btn addTarget:self action:@selector(characterTouchAction:) forControlEvents:UIControlEventTouchUpInside];
-        [btn.layer setBorderWidth:1.0f];
+//        [btn.layer setBorderWidth:1.0f];
         [self addSubview:btn];
         [self.charsBtn addObject:btn];
         i++;
     }
-}
-
--(void) returnPressed:(UIButton *)btn {
-    [self.textView insertText:@"\n"];
 }
 
 - (void) setupASCIICapableLayout:(BOOL)init withArray:(NSArray *)array{
@@ -275,25 +296,20 @@ enum {
         }
         
         JSChar *btn = [[JSChar alloc] initWithFrame:CGRectMake(btnX, btnY, btnWidth, kBtnHeight)];
-        btn.userInteractionEnabled = YES;
+        btn.tag = i;
         [btn setTitle:btnStr forState:UIControlStateNormal];
 //        [btn setBackgroundColor:[UIColor blackColor]];
         [btn.titleLabel setFont:[UIFont systemFontOfSize:22]];
-        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+//        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         [btn addTarget:self action:@selector(characterTouchAction:) forControlEvents:UIControlEventTouchUpInside];
-        [btn.layer setBorderWidth:1.0f];
+//        [btn.layer setBorderWidth:1.0f];
         [self addSubview:btn];
         [self.charsBtn addObject:btn];
         i++;
     }
 }
 
-- (void)characterTouchAction:(JSChar *)btn {
-//    [self addPopupToButton:btn];
-    [self.textView insertText:btn.titleLabel.text];
-}
-
-- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     CGPoint location = [[touches anyObject] locationInView:self];
     
     for (JSChar *b in self.charsBtn) {
@@ -308,17 +324,47 @@ enum {
     }
 }
 
--(void) touchesEnded: (NSSet *)touches withEvent: (UIEvent *)event{
-//    CGPoint location = [[touches anyObject] locationInView:self];
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    CGPoint location = [[touches anyObject] locationInView:self];
+    
+    for (JSChar *b in self.charsBtn) {
+        if ([b subviews].count > 1) {
+            [[[b subviews] objectAtIndex:1] removeFromSuperview];
+        }
+        if(CGRectContainsPoint(b.frame, location))
+        {
+            [self addPopupToButton:b];
+            [[UIDevice currentDevice] playInputClick];
+        }
+    }
+}
+
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    CGPoint location = [[touches anyObject] locationInView:self];
+    
+    for (JSChar *b in self.charsBtn) {
+        if ([b subviews].count > 1) {
+            [[[b subviews] objectAtIndex:1] removeFromSuperview];
+        }
+        if(CGRectContainsPoint(b.frame, location))
+        {
+            [self addPopupToButton:b];
+            [[UIDevice currentDevice] playInputClick];
+        }
+    }
+}
+
+-(void) touchesEnded: (NSSet<UITouch *> *)touches withEvent: (UIEvent *)event {
+    CGPoint location = [[touches anyObject] locationInView:self];
     
     for (UIButton *b in self.charsBtn) {
         if ([b subviews].count > 1) {
             [[[b subviews] objectAtIndex:1] removeFromSuperview];
         }
-//        if(CGRectContainsPoint(b.frame, location))
-//        {
-//            [self characterPressed:b];
-//        }
+        if(CGRectContainsPoint(b.frame, location))
+        {
+            [self.textView insertText:b.titleLabel.text];
+        }
     }
 }
 
