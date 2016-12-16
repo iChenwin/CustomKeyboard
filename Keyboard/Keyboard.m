@@ -33,7 +33,7 @@
 
 #define kKBH         216
 #define kBtnHeight   35
-#define kBtnGap      5
+#define kBtnGap      1
 #define kVerticalGap 19
 #define kStartBtnX   kBtnGap / 2
 #define kStartBtnY   15
@@ -251,7 +251,7 @@ enum {
             btn.tag = 1;
         }
         
-        btn.userInteractionEnabled = YES;
+        btn.userInteractionEnabled = NO;
         [btn setTitle:btnStr forState:UIControlStateNormal];
         [btn.titleLabel setFont:[UIFont systemFontOfSize:22]];
 //        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
@@ -297,12 +297,14 @@ enum {
         
         JSChar *btn = [[JSChar alloc] initWithFrame:CGRectMake(btnX, btnY, btnWidth, kBtnHeight)];
         btn.tag = i;
+        btn.userInteractionEnabled = NO;
         [btn setTitle:btnStr forState:UIControlStateNormal];
 //        [btn setBackgroundColor:[UIColor blackColor]];
         [btn.titleLabel setFont:[UIFont systemFontOfSize:22]];
 //        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         [btn addTarget:self action:@selector(characterTouchAction:) forControlEvents:UIControlEventTouchUpInside];
 //        [btn.layer setBorderWidth:1.0f];
+//        [btn.layer setBorderColor:[UIColor whiteColor].CGColor];
         [self addSubview:btn];
         [self.charsBtn addObject:btn];
         i++;
